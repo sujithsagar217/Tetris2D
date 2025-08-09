@@ -37,7 +37,8 @@
 <div class="wrap">
   <div class="game">
     <div class="card" style="padding:12px 12px 8px 12px">
-      <canvas id="playfield" width="300" height="600"></canvas>
+      <!-- widened canvas to 320 for clearer overlays; height matches 20×32 = 640 -->
+      <canvas id="playfield" width="320" height="640"></canvas>
       <div class="row" style="margin-top:10px">
         <button id="btn-start">Start / Restart (R)</button>
         <button id="btn-pause">Pause (P)</button>
@@ -107,7 +108,7 @@
 window.addEventListener('DOMContentLoaded', () => {
 (() => {
   // --- Config ---
-  const COLS = 10, ROWS = 20, BLOCK = 30; // 300x600 playfield
+  const COLS = 10, ROWS = 20, BLOCK = 32; // 320×640 playfield
   const GRAVITY_BY_LEVEL = [1000, 850, 700, 600, 520, 450, 390, 340, 300, 265, 235, 210, 190, 170, 150];
   const SCORE_CLEAR = [0, 100, 300, 500, 800]; // 1..4 lines
 
@@ -331,9 +332,31 @@ window.addEventListener('DOMContentLoaded', () => {
     running=false; paused=false;
     draw();
     ctx.save();
-    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,pf.width,pf.height);
-    ctx.fillStyle='#fff'; ctx.font='bold 24px system-ui'; ctx.textAlign='center';
-    ctx.fillText('Game Over — Press R to restart', pf.width/2, pf.height/2);
+    ctx.fillStyle='rgba(0,0,0,0.55)';
+    ctx.fillRect(0,0,pf.width,pf.height);
+    ctx.fillStyle='#fff';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    // headline
+    ctx.font='bold 26px system-ui';
+    ctx.fillText('Game Over', pf.width/2, pf.height/2 - 18);
+    // subline wrapped to fit any width
+    ctx.font='600 16px system-ui';
+    const msg='Press R to restart';
+    const maxW = pf.width - 24; // margin
+    if (ctx.measureText(msg).width <= maxW) {
+      ctx.fillText(msg, pf.width/2, pf.height/2 + 10);
+    } else {
+      // simple manual wrap by splitting words
+      const words = msg.split(' ');
+      let line=''; let y = pf.height/2 + 4;
+      for (let i=0;i<words.length;i++){
+        const test = line ? line + ' ' + words[i] : words[i];
+        if (ctx.measureText(test).width > maxW) { ctx.fillText(line, pf.width/2, y); y += 20; line = words[i]; }
+        else { line = test; }
+      }
+      if (line) ctx.fillText(line, pf.width/2, y);
+    }
     ctx.restore();
   }
 
